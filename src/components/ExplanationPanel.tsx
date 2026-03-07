@@ -73,7 +73,7 @@ export default function ExplanationPanel() {
                     AI Provider
                 </label>
                 <div className="bg-brand-card border border-brand-border rounded-lg px-3 py-2.5 flex items-center justify-between cursor-pointer hover:border-brand-muted transition-colors">
-                    <span className="text-sm text-white">GPT-4o (OpenAI)</span>
+                    <span className="text-sm text-white">Gemini 3.0 (Google)</span>
                     <div className="flex items-center gap-2">
                         <span className="text-[10px] font-semibold bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">
                             FREE
