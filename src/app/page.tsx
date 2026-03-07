@@ -1,14 +1,26 @@
+import Navbar from "@/components/Navbar";
+import FreeTierBanner from "@/components/FreeTierBanner";
+import EditorPanel from "@/components/EditorPanel";
+import ExplanationPanel from "@/components/ExplanationPanel";
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-semibold text-white mb-2">
-          CodeSplain
-        </h1>
-        <p className="text-brand-muted text-lg">
-          Understand any code in seconds.
-        </p>
+    <div className="flex flex-col h-screen overflow-hidden">
+      <Navbar />
+      <FreeTierBanner />
+
+      {/* Two-panel layout */}
+      <div className="flex flex-1 min-h-0">
+        {/* Left: Code Editor */}
+        <div className="flex-[3] border-r border-brand-border">
+          <EditorPanel />
+        </div>
+
+        {/* Right: Explanation Panel */}
+        <div className="flex-[2] bg-brand-bg">
+          <ExplanationPanel />
+        </div>
       </div>
-    </main>
+    </div>
   );
 }
