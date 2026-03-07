@@ -19,7 +19,7 @@ CodeSplain is a web application that helps developers understand unfamiliar code
 - Code execution / running pasted code
 - Collaborative editing or real-time features
 - Mobile-first responsive design (desktop-first)
-- Backend database (v1 is client-side + API routes only)
+- Full relational database (v1 uses minimal KV store for free tier tracking only)
 - Paid subscription tiers or payment processing
 - IDE extensions or CLI tools
 
@@ -45,7 +45,8 @@ CodeSplain is a web application that helps developers understand unfamiliar code
 | Animations | Framer Motion |
 | Backend | Next.js API Routes |
 | AI Providers | Google Gemini, Anthropic Claude, OpenAI GPT |
-| Storage | localStorage (API keys, usage counter, cached explanations) |
+| Client Storage | localStorage (API keys, cached explanations) |
+| Server Storage | Vercel KV / Upstash Redis (free tier IP tracking only) |
 | Deployment | Vercel |
 
 ## Design System
@@ -66,8 +67,10 @@ CodeSplain is a web application that helps developers understand unfamiliar code
 ## Constraints
 
 - **API Keys**: Platform must provide a Gemini API key for free tier; users bring their own keys beyond that
-- **Free Tier Limit**: 10 explanations per browser (tracked in localStorage)
-- **No auth**: v1 has no user accounts — all state is client-side
+- **BYOK Security**: Keys stored only in encrypted localStorage; sent client → API gateway per-request; never stored/logged server-side
+- **Free Tier Limit**: 10 explanations per IP (tracked via server-side database counter)
+- **No auth**: v1 has no user accounts — BYOK state is client-side, free tier is server-side
+- **Streaming Order**: AI sections stream in fixed order: summary → line_by_line → concepts → improvements → simplified_code → examples
 - **Supported Languages**: JavaScript, Python, TypeScript, Java, C++, HTML/CSS
 - **Response Format**: AI must return structured JSON for consistent rendering
 - **Security**: Must sanitize code input, prevent prompt injection, encrypt stored keys

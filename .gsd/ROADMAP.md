@@ -33,9 +33,9 @@
 
 ### Phase 3: AI Gateway & Provider Integration
 **Status**: ⬜ Not Started
-**Objective**: Build the AI gateway API routes that route requests to the correct provider (Gemini, Claude, OpenAI). Design structured prompts that return consistent JSON across all providers. Implement response normalization and streaming.
+**Objective**: Build the AI gateway API routes that route requests to the correct provider (Gemini, Claude, OpenAI). Design structured prompts that return consistent JSON across all providers. Implement response normalization and streaming. **Streaming must deliver sections in fixed order:** summary → line_by_line → concepts → improvements → simplified_code → examples.
 **Requirements**: REQ-06, REQ-13, REQ-14, REQ-18, REQ-19, REQ-20, REQ-21
-**Deliverable**: Working API endpoint `/api/explain` that accepts code, language, difficulty, provider, and API key, returning streaming structured JSON
+**Deliverable**: Working API endpoint `/api/explain` that accepts code, language, difficulty, provider, and API key, returning streaming structured JSON in section order
 
 ---
 
@@ -49,9 +49,9 @@
 
 ### Phase 5: BYOK, Free Tier & Settings
 **Status**: ⬜ Not Started
-**Objective**: Build the AI Providers settings modal matching reference design. Implement encrypted localStorage for API keys, connection status indicators, free tier usage tracking with banner counter, and limit enforcement.
+**Objective**: Build the AI Providers settings modal matching reference design. Implement encrypted localStorage for API keys (never server-stored/logged), connection status indicators, free tier usage tracking via **IP + database counter** (not localStorage), and limit enforcement.
 **Requirements**: REQ-22, REQ-23, REQ-24, REQ-25, REQ-26, REQ-27, REQ-28
-**Deliverable**: Fully working BYOK system with free tier enforcement
+**Deliverable**: Fully working BYOK system with server-side free tier enforcement
 
 ---
 
