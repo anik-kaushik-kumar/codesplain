@@ -4,14 +4,17 @@ import { useState, useRef } from "react";
 import Editor, { type Monaco } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { codesplainTheme, DEFAULT_CODE } from "@/lib/monaco-theme";
+import LanguageSelector from "@/components/LanguageSelector";
+import type { LanguageId } from "@/lib/languages";
 
 interface EditorPanelProps {
-    onLanguageChange?: (language: string) => void;
-    language?: string;
+    language: LanguageId;
+    onLanguageChange: (language: LanguageId) => void;
 }
 
 export default function EditorPanel({
-    language = "typescript",
+    language,
+    onLanguageChange,
 }: EditorPanelProps) {
     const [code, setCode] = useState(DEFAULT_CODE);
     const [copied, setCopied] = useState(false);
@@ -22,8 +25,8 @@ export default function EditorPanel({
         monaco.editor.defineTheme("codesplain-dark", codesplainTheme);
     };
 
-    const handleMount = (editor: editor.IStandaloneCodeEditor) => {
-        editorRef.current = editor;
+    const handleMount = (ed: editor.IStandaloneCodeEditor) => {
+        editorRef.current = ed;
     };
 
     const handleCopy = async () => {
@@ -47,23 +50,7 @@ export default function EditorPanel({
             {/* Toolbar */}
             <div className="flex items-center justify-between px-4 py-2 border-b border-brand-border">
                 <div className="flex items-center gap-3">
-                    {/* Language selector placeholder — replaced in Plan 2.2 */}
-                    <div className="flex items-center gap-2 bg-brand-card border border-brand-border rounded-md px-3 py-1.5 text-sm text-white cursor-pointer hover:border-brand-muted transition-colors">
-                        <span className="capitalize">
-                            {language === "cpp" ? "C++" : language}
-                        </span>
-                        <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            className="text-brand-muted"
-                        >
-                            <polyline points="6 9 12 15 18 9" />
-                        </svg>
-                    </div>
+                    <LanguageSelector value={language} onChange={onLanguageChange} />
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -113,7 +100,7 @@ export default function EditorPanel({
             <div className="flex-1">
                 <Editor
                     height="100%"
-                    language={language}
+                    language={language === "cpp" ? "cpp" : language}
                     value={code}
                     theme="codesplain-dark"
                     beforeMount={handleBeforeMount}
