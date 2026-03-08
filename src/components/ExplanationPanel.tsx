@@ -3,6 +3,7 @@
 import type { SectionKey } from "@/lib/ai/types";
 import { SECTION_ORDER } from "@/lib/ai/types";
 import ExplanationSection from "@/components/ExplanationSection";
+import AIProviderDropdown from "@/components/AIProviderDropdown";
 
 interface ExplanationPanelProps {
     sections: Partial<Record<SectionKey, string>>;
@@ -12,6 +13,9 @@ interface ExplanationPanelProps {
     onExplain: () => void;
     hasByokKey: boolean;
     selectedModel: string;
+    byokModels: { id: string; displayName: string; available: boolean }[];
+    onSelectModel: (modelId: string, isByok: boolean) => void;
+    onOpenSettings: () => void;
     onShare: () => void;
     hasExplanation: boolean;
     shareToast: boolean;
@@ -64,13 +68,13 @@ export default function ExplanationPanel({
     onExplain,
     hasByokKey,
     selectedModel,
+    byokModels,
+    onSelectModel,
+    onOpenSettings,
     onShare,
     hasExplanation,
     shareToast,
 }: ExplanationPanelProps) {
-    const modelDisplayName = hasByokKey
-        ? selectedModel.replace("models/", "").split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
-        : "Gemini 3.0 (Google)";
     return (
         <div className="flex flex-col h-full">
             {/* Scrollable content */}
@@ -80,28 +84,13 @@ export default function ExplanationPanel({
                     <label className="text-xs font-medium text-brand-muted uppercase tracking-wider block mb-2">
                         AI Provider
                     </label>
-                    <div className="bg-brand-card border border-brand-border rounded-lg px-3 py-2.5 flex items-center justify-between cursor-pointer hover:border-brand-muted transition-colors">
-                        <span className="text-sm text-white">{modelDisplayName}</span>
-                        <div className="flex items-center gap-2">
-                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${hasByokKey
-                                ? "bg-brand-primary/20 text-brand-link"
-                                : "bg-yellow-500/20 text-yellow-400"
-                                }`}>
-                                {hasByokKey ? "BYOK" : "FREE"}
-                            </span>
-                            <svg
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                className="text-brand-muted"
-                            >
-                                <polyline points="6 9 12 15 18 9" />
-                            </svg>
-                        </div>
-                    </div>
+                    <AIProviderDropdown
+                        hasByokKey={hasByokKey}
+                        selectedModel={selectedModel}
+                        byokModels={byokModels}
+                        onSelectModel={onSelectModel}
+                        onOpenSettings={onOpenSettings}
+                    />
                 </div>
 
                 {/* Explain Button */}

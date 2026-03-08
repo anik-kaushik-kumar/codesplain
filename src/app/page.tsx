@@ -13,6 +13,12 @@ import { loadApiKey, hasStoredKey } from "@/lib/crypto";
 import { decodeShareState, generateShareUrl } from "@/lib/sharing";
 import type { LanguageId, Difficulty } from "@/lib/languages";
 
+interface ByokModel {
+  id: string;
+  displayName: string;
+  available: boolean;
+}
+
 export default function Home() {
   const [language, setLanguage] = useState<LanguageId>("typescript");
   const [difficulty, setDifficulty] = useState<Difficulty>("beginner");
@@ -21,7 +27,26 @@ export default function Home() {
   const [hasByokKey, setHasByokKey] = useState(false);
   const [byokKey, setByokKey] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash");
+  const [isByokMode, setIsByokMode] = useState(false);
+  const [byokModels, setByokModels] = useState<ByokModel[]>([]);
   const [shareToast, setShareToast] = useState(false);
+
+  // Fetch BYOK models when key changes
+  const fetchByokModels = useCallback(async (key: string) => {
+    try {
+      const res = await fetch("/api/models", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: key }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setByokModels(data.models || []);
+      }
+    } catch {
+      setByokModels([]);
+    }
+  }, []);
 
   // Load BYOK state + share URL on mount
   useEffect(() => {
@@ -31,10 +56,13 @@ export default function Home() {
         if (key) {
           setHasByokKey(true);
           setByokKey(key);
+          fetchByokModels(key);
         }
       }
-      const saved = localStorage.getItem("codesplain_selected_model");
-      if (saved) setSelectedModel(saved);
+      const savedModel = localStorage.getItem("codesplain_selected_model");
+      const savedByokMode = localStorage.getItem("codesplain_byok_mode");
+      if (savedModel) setSelectedModel(savedModel);
+      if (savedByokMode === "true") setIsByokMode(true);
 
       // Decode share URL
       const params = new URLSearchParams(window.location.search);
@@ -45,14 +73,13 @@ export default function Home() {
           setCode(state.code);
           setLanguage(state.language as LanguageId);
           setDifficulty(state.difficulty as Difficulty);
-          // Clean URL
           window.history.replaceState({}, "", window.location.pathname);
         }
       }
     })();
-  }, []);
+  }, [fetchByokModels]);
 
-  // Keyboard shortcut: Ctrl+Enter / Cmd+Enter to explain
+  // Keyboard shortcut: Ctrl+Enter / Cmd+Enter
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -64,21 +91,41 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handler);
   });
 
-  const handleKeyChange = useCallback((hasKey: boolean, key: string | null) => {
-    setHasByokKey(hasKey);
-    setByokKey(key);
-    if (!hasKey) {
-      setSelectedModel("gemini-2.0-flash");
-    }
-    const saved = localStorage.getItem("codesplain_selected_model");
-    if (saved) setSelectedModel(saved);
-  }, []);
+  const handleKeyChange = useCallback(
+    (hasKey: boolean, key: string | null) => {
+      setHasByokKey(hasKey);
+      setByokKey(key);
+      if (!hasKey) {
+        setIsByokMode(false);
+        setSelectedModel("gemini-2.0-flash");
+        setByokModels([]);
+        localStorage.removeItem("codesplain_byok_mode");
+        localStorage.removeItem("codesplain_selected_model");
+      } else if (key) {
+        fetchByokModels(key);
+      }
+    },
+    [fetchByokModels]
+  );
+
+  const handleSelectModel = useCallback(
+    (modelId: string, isByok: boolean) => {
+      setSelectedModel(modelId);
+      setIsByokMode(isByok);
+      localStorage.setItem("codesplain_selected_model", modelId);
+      localStorage.setItem("codesplain_byok_mode", String(isByok));
+    },
+    []
+  );
 
   const { explain, sections, isLoading, error, activeSection } = useExplain();
 
   const handleExplain = () => {
     if (code.trim()) {
-      explain(code, language, difficulty, byokKey, selectedModel);
+      // Only pass BYOK key if in BYOK mode
+      const keyToUse = isByokMode ? byokKey : null;
+      const modelToUse = isByokMode ? selectedModel : "gemini-2.0-flash";
+      explain(code, language, difficulty, keyToUse, modelToUse);
     }
   };
 
@@ -90,12 +137,14 @@ export default function Home() {
     });
   };
 
-  const hasExplanation = Object.values(sections).some((s) => s && s.length > 0);
+  const hasExplanation = Object.values(sections).some(
+    (s) => s && s.length > 0
+  );
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <Navbar onSettingsClick={() => setSettingsOpen(true)} />
-      <FreeTierBanner hasByokKey={hasByokKey} />
+      <FreeTierBanner hasByokKey={isByokMode} />
 
       {/* Two-panel layout */}
       <div className="flex flex-1 min-h-0">
@@ -126,6 +175,9 @@ export default function Home() {
               onExplain={handleExplain}
               hasByokKey={hasByokKey}
               selectedModel={selectedModel}
+              byokModels={byokModels}
+              onSelectModel={handleSelectModel}
+              onOpenSettings={() => setSettingsOpen(true)}
               onShare={handleShare}
               hasExplanation={hasExplanation}
               shareToast={shareToast}
