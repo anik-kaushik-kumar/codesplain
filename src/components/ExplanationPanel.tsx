@@ -2,6 +2,7 @@
 
 import type { SectionKey } from "@/lib/ai/types";
 import { SECTION_ORDER } from "@/lib/ai/types";
+import ExplanationSection from "@/components/ExplanationSection";
 
 interface ExplanationPanelProps {
     sections: Partial<Record<SectionKey, string>>;
@@ -111,88 +112,34 @@ export default function ExplanationPanel({
 
                 {/* Error */}
                 {error && (
-                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2.5 text-red-400 text-sm">
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2.5 text-red-400 text-sm animate-[slideIn_0.3s_ease-out]">
                         {error}
                     </div>
                 )}
 
-                {/* Sections */}
-                <div className="space-y-1">
-                    {SECTION_CONFIG.map(({ key, label, icon, color }) => {
+                {/* Sections — Collapsible Accordions */}
+                <div className="space-y-1.5">
+                    {SECTION_CONFIG.map(({ key, label, icon, color }, index) => {
                         const content = sections[key];
                         const isActive = activeSection === key && isLoading;
-                        const hasContent = !!content;
                         const sectionIdx = SECTION_ORDER.indexOf(key);
                         const activeIdx = activeSection
                             ? SECTION_ORDER.indexOf(activeSection)
                             : -1;
-                        const isPending = isLoading && !hasContent && sectionIdx > activeIdx;
+                        const isPending = isLoading && !content && sectionIdx > activeIdx;
 
                         return (
-                            <div
+                            <ExplanationSection
                                 key={key}
-                                className={`rounded-lg border transition-all duration-300 ${hasContent
-                                        ? "border-brand-border bg-brand-card/50"
-                                        : isActive
-                                            ? "border-brand-primary/50 bg-brand-primary/5"
-                                            : "border-brand-border/50 bg-transparent"
-                                    }`}
-                            >
-                                {/* Header */}
-                                <div
-                                    className={`flex items-center justify-between px-3 py-2.5 ${isPending ? "opacity-40" : ""
-                                        }`}
-                                >
-                                    <div className="flex items-center gap-2.5">
-                                        <span className={`text-sm ${color}`}>{icon}</span>
-                                        <span
-                                            className={`text-sm ${hasContent ? "text-white" : "text-brand-text"}`}
-                                        >
-                                            {label}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center">
-                                        {isActive && (
-                                            <div className="w-3.5 h-3.5 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-                                        )}
-                                        {hasContent && (
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                className="text-green-400"
-                                            >
-                                                <polyline points="20 6 9 17 4 12" />
-                                            </svg>
-                                        )}
-                                        {!isActive && !hasContent && (
-                                            <svg
-                                                width="14"
-                                                height="14"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                className="text-brand-muted"
-                                            >
-                                                <polyline points="9 18 15 12 9 6" />
-                                            </svg>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {/* Content */}
-                                {hasContent && (
-                                    <div className="px-3 pb-3 pt-0">
-                                        <div className="text-sm text-brand-text leading-relaxed whitespace-pre-wrap font-mono">
-                                            {content}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                                sectionKey={key}
+                                label={label}
+                                icon={icon}
+                                color={color}
+                                content={content}
+                                isActive={isActive}
+                                isPending={isPending}
+                                index={index}
+                            />
                         );
                     })}
                 </div>
