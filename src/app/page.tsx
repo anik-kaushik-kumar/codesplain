@@ -10,6 +10,7 @@ import SettingsModal from "@/components/SettingsModal";
 import { useExplain } from "@/hooks/useExplain";
 import { DEFAULT_CODE } from "@/lib/monaco-theme";
 import { loadApiKey, hasStoredKey } from "@/lib/crypto";
+import { decodeShareState, generateShareUrl } from "@/lib/sharing";
 import type { LanguageId, Difficulty } from "@/lib/languages";
 
 export default function Home() {
@@ -20,8 +21,9 @@ export default function Home() {
   const [hasByokKey, setHasByokKey] = useState(false);
   const [byokKey, setByokKey] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash");
+  const [shareToast, setShareToast] = useState(false);
 
-  // Load BYOK state on mount
+  // Load BYOK state + share URL on mount
   useEffect(() => {
     (async () => {
       if (typeof window !== "undefined" && hasStoredKey("gemini")) {
@@ -33,8 +35,34 @@ export default function Home() {
       }
       const saved = localStorage.getItem("codesplain_selected_model");
       if (saved) setSelectedModel(saved);
+
+      // Decode share URL
+      const params = new URLSearchParams(window.location.search);
+      const shareParam = params.get("s");
+      if (shareParam) {
+        const state = decodeShareState(shareParam);
+        if (state) {
+          setCode(state.code);
+          setLanguage(state.language as LanguageId);
+          setDifficulty(state.difficulty as Difficulty);
+          // Clean URL
+          window.history.replaceState({}, "", window.location.pathname);
+        }
+      }
     })();
   }, []);
+
+  // Keyboard shortcut: Ctrl+Enter / Cmd+Enter to explain
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleExplain();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  });
 
   const handleKeyChange = useCallback((hasKey: boolean, key: string | null) => {
     setHasByokKey(hasKey);
@@ -42,7 +70,6 @@ export default function Home() {
     if (!hasKey) {
       setSelectedModel("gemini-2.0-flash");
     }
-    // Reload model from localStorage
     const saved = localStorage.getItem("codesplain_selected_model");
     if (saved) setSelectedModel(saved);
   }, []);
@@ -54,6 +81,16 @@ export default function Home() {
       explain(code, language, difficulty, byokKey, selectedModel);
     }
   };
+
+  const handleShare = () => {
+    const url = generateShareUrl({ code, language, difficulty });
+    navigator.clipboard.writeText(url).then(() => {
+      setShareToast(true);
+      setTimeout(() => setShareToast(false), 2000);
+    });
+  };
+
+  const hasExplanation = Object.values(sections).some((s) => s && s.length > 0);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -89,6 +126,9 @@ export default function Home() {
               onExplain={handleExplain}
               hasByokKey={hasByokKey}
               selectedModel={selectedModel}
+              onShare={handleShare}
+              hasExplanation={hasExplanation}
+              shareToast={shareToast}
             />
           </div>
         </div>

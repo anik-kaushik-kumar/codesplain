@@ -12,6 +12,9 @@ interface ExplanationPanelProps {
     onExplain: () => void;
     hasByokKey: boolean;
     selectedModel: string;
+    onShare: () => void;
+    hasExplanation: boolean;
+    shareToast: boolean;
 }
 
 const SECTION_CONFIG: {
@@ -61,6 +64,9 @@ export default function ExplanationPanel({
     onExplain,
     hasByokKey,
     selectedModel,
+    onShare,
+    hasExplanation,
+    shareToast,
 }: ExplanationPanelProps) {
     const modelDisplayName = hasByokKey
         ? selectedModel.replace("models/", "").split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
@@ -78,8 +84,8 @@ export default function ExplanationPanel({
                         <span className="text-sm text-white">{modelDisplayName}</span>
                         <div className="flex items-center gap-2">
                             <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${hasByokKey
-                                    ? "bg-brand-primary/20 text-brand-link"
-                                    : "bg-yellow-500/20 text-yellow-400"
+                                ? "bg-brand-primary/20 text-brand-link"
+                                : "bg-yellow-500/20 text-yellow-400"
                                 }`}>
                                 {hasByokKey ? "BYOK" : "FREE"}
                             </span>
@@ -120,6 +126,11 @@ export default function ExplanationPanel({
                     )}
                 </button>
 
+                {/* Keyboard shortcut hint */}
+                <p className="text-center text-[11px] text-brand-muted -mt-1">
+                    {typeof navigator !== "undefined" && /Mac/i.test(navigator.userAgent) ? "⌘" : "Ctrl"}+Enter
+                </p>
+
                 {/* Error */}
                 {error && (
                     <div className="bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2.5 text-red-400 text-sm animate-[slideIn_0.3s_ease-out]">
@@ -153,6 +164,21 @@ export default function ExplanationPanel({
                         );
                     })}
                 </div>
+
+                {/* Share Button */}
+                {hasExplanation && !isLoading && (
+                    <button
+                        onClick={onShare}
+                        className="w-full py-2 rounded-lg border border-brand-border text-brand-muted hover:text-white hover:border-brand-muted text-sm flex items-center justify-center gap-2 transition-all cursor-pointer"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                            <polyline points="16 6 12 2 8 6" />
+                            <line x1="12" y1="2" x2="12" y2="15" />
+                        </svg>
+                        {shareToast ? "Copied!" : "Share Explanation"}
+                    </button>
+                )}
             </div>
 
             {/* Footer */}

@@ -15,9 +15,30 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CodeSplain — Understand Any Code in Seconds",
+  title: "CodeSplain — AI Code Explainer",
   description:
-    "Paste code and get instant AI-powered explanations. Line-by-line breakdowns, key concepts, improvements, and simplified versions.",
+    "Paste code, get instant AI-powered explanations. Line-by-line breakdowns, key concepts, improvements, and simplified versions.",
+  openGraph: {
+    title: "CodeSplain — AI Code Explainer",
+    description:
+      "Paste code, get instant AI-powered explanations with Gemini.",
+    type: "website",
+    siteName: "CodeSplain",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CodeSplain — AI Code Explainer",
+    description:
+      "Paste code, get instant AI-powered explanations with Gemini.",
+  },
+  keywords: [
+    "code explainer",
+    "AI",
+    "Gemini",
+    "code analysis",
+    "programming",
+    "learning",
+  ],
 };
 
 export default function RootLayout({
