@@ -53,19 +53,30 @@ export async function generateExplanation(
         return parsed;
     } catch (error) {
         if (error instanceof Error) {
+            const msg = error.message.toLowerCase();
             // Check for common API errors
             if (
-                error.message.includes("API_KEY_INVALID") ||
-                error.message.includes("PERMISSION_DENIED")
+                msg.includes("api_key_invalid") ||
+                msg.includes("permission_denied") ||
+                msg.includes("invalid api key")
             ) {
                 throw new Error("Invalid API key. Please check your Gemini API key.");
             }
-            if (error.message.includes("QUOTA_EXCEEDED")) {
+            if (
+                msg.includes("quota") ||
+                msg.includes("rate") ||
+                msg.includes("429") ||
+                msg.includes("resource_exhausted")
+            ) {
                 throw new Error(
-                    "API quota exceeded. Please try again later or use your own API key."
+                    "API quota exceeded. The free tier limit has been reached. Please try again later or add your own API key in Settings."
                 );
             }
-            throw error;
+            if (msg.includes("not found") || msg.includes("404")) {
+                throw new Error("AI model not available. Please try again later.");
+            }
+            // Generic but clean error
+            throw new Error("Failed to generate explanation. Please try again.");
         }
         throw new Error("An unexpected error occurred while generating explanation.");
     }
