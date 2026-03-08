@@ -1,4 +1,44 @@
+import { SchemaType } from "@google/generative-ai";
 import type { ExplainRequest } from "./types";
+
+export const RESPONSE_SCHEMA = {
+    type: SchemaType.OBJECT,
+    properties: {
+        summary: {
+            type: SchemaType.STRING,
+            description: "2-3 sentence overview of the code",
+        },
+        line_by_line: {
+            type: SchemaType.STRING,
+            description:
+                "Markdown-formatted line-by-line explanation with line numbers",
+        },
+        concepts: {
+            type: SchemaType.STRING,
+            description: "Bullet list of programming concepts",
+        },
+        improvements: {
+            type: SchemaType.STRING,
+            description: "Numbered list of improvement suggestions with code",
+        },
+        simplified_code: {
+            type: SchemaType.STRING,
+            description: "Simpler rewrite of the code",
+        },
+        examples: {
+            type: SchemaType.STRING,
+            description: "Sample inputs and expected outputs",
+        },
+    },
+    required: [
+        "summary",
+        "line_by_line",
+        "concepts",
+        "improvements",
+        "simplified_code",
+        "examples",
+    ],
+};
 
 export function buildExplanationPrompt(request: ExplainRequest) {
     const difficultyGuide = {
@@ -45,42 +85,3 @@ ${request.code}
 
     return { systemPrompt, userPrompt };
 }
-
-export const RESPONSE_SCHEMA = {
-    type: "object" as const,
-    properties: {
-        summary: {
-            type: "string" as const,
-            description: "2-3 sentence overview of the code",
-        },
-        line_by_line: {
-            type: "string" as const,
-            description:
-                "Markdown-formatted line-by-line explanation with line numbers",
-        },
-        concepts: {
-            type: "string" as const,
-            description: "Bullet list of programming concepts",
-        },
-        improvements: {
-            type: "string" as const,
-            description: "Numbered list of improvement suggestions with code",
-        },
-        simplified_code: {
-            type: "string" as const,
-            description: "Simpler rewrite of the code",
-        },
-        examples: {
-            type: "string" as const,
-            description: "Sample inputs and expected outputs",
-        },
-    },
-    required: [
-        "summary",
-        "line_by_line",
-        "concepts",
-        "improvements",
-        "simplified_code",
-        "examples",
-    ] as const,
-};
