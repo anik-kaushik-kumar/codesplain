@@ -1,29 +1,23 @@
 # STATE.md — Project State
 
-> **Last Updated**: 2026-03-08T12:00:00+08:00
+> **Last Updated**: 2026-03-08T13:00:00+08:00
 
 ## Current Position
 
-- **Phase**: 2 (completed)
+- **Phase**: 3 (completed)
 - **Task**: All tasks complete
 - **Status**: Verified
 
 ## Last Session Summary
 
-Phase 2 executed successfully. 2 plans, 4 tasks completed.
+Phase 3 executed successfully. 3 plans, 6 tasks completed.
 
-- Plan 2.1: Monaco Editor integrated with custom dark theme (GitHub-dark-inspired)
-- Plan 2.2: Language selector, difficulty selector, format/copy buttons wired
-- Default free provider changed from GPT-4o to Gemini 3.0 (Google)
-- Visual verification passed
-
-## Key Decisions Made
-
-- Tech stack: Next.js 16 + TypeScript + Tailwind v4 + Monaco Editor
-- AI providers: Gemini 3.0 (default/free), Claude, OpenAI via BYOK
-- Tailwind v4 uses CSS-based @theme inline config
-- @monaco-editor/react compatible with React 19 / Next.js 16
+- Plan 3.1: AI types, prompt template, Gemini API key configured
+- Plan 3.2: Gemini provider + /api/explain SSE streaming endpoint
+- Plan 3.3: useExplain hook + ExplanationPanel streaming UI
+- Error handling improved for user-friendly messages
+- End-to-end pipeline verified (API key quota limited actual content test)
 
 ## Next Steps
 
-1. `/plan 3` — Create Phase 3 execution plans (AI Gateway & Streaming)
+1. `/plan 4` — Create Phase 4 execution plans (Explanation Panel & Visualization)
