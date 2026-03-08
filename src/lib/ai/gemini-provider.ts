@@ -3,7 +3,8 @@ import { buildExplanationPrompt, RESPONSE_SCHEMA } from "./prompt";
 import type { ExplainRequest, ExplanationResponse } from "./types";
 
 export async function generateExplanation(
-    request: ExplainRequest
+    request: ExplainRequest,
+    modelId?: string
 ): Promise<ExplanationResponse> {
     // Determine API key: BYOK takes priority, fallback to platform key
     const apiKey = request.apiKey || process.env.GEMINI_API_KEY;
@@ -17,7 +18,7 @@ export async function generateExplanation(
     const genAI = new GoogleGenerativeAI(apiKey);
 
     const model = genAI.getGenerativeModel({
-        model: "gemini-2.0-flash",
+        model: modelId?.replace("models/", "") || "gemini-2.0-flash",
         generationConfig: {
             responseMimeType: "application/json",
             responseSchema: RESPONSE_SCHEMA as Schema,

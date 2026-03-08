@@ -1,6 +1,10 @@
 "use client";
 
-export default function Navbar() {
+interface NavbarProps {
+    onSettingsClick: () => void;
+}
+
+export default function Navbar({ onSettingsClick }: NavbarProps) {
     return (
         <header className="h-14 border-b border-brand-border bg-brand-bg flex items-center justify-between px-5 shrink-0">
             {/* Left: Logo */}
@@ -41,10 +45,8 @@ export default function Navbar() {
                     GitHub
                 </a>
                 <button
-                    className="text-sm text-brand-muted hover:text-white transition-colors"
-                    onClick={() => {
-                        /* Settings modal — Phase 5 */
-                    }}
+                    className="text-sm text-brand-muted hover:text-white transition-colors cursor-pointer"
+                    onClick={onSettingsClick}
                 >
                     Settings
                 </button>
@@ -54,3 +56,4 @@ export default function Navbar() {
         </header>
     );
 }
+

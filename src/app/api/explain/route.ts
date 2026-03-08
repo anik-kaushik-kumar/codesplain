@@ -1,13 +1,15 @@
 import { NextResponse } from "next/server";
+import { headers } from "next/headers";
 import { generateExplanation } from "@/lib/ai/gemini-provider";
 import { SECTION_ORDER, type StreamChunk, type ExplainRequest } from "@/lib/ai/types";
+import { isLimitReached, incrementUsage } from "@/lib/usage-tracker";
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
 
         // Validate required fields
-        const { code, language, difficulty, apiKey } = body as ExplainRequest;
+        const { code, language, difficulty, apiKey, model } = body as ExplainRequest & { model?: string };
 
         if (!code || typeof code !== "string" || code.trim().length === 0) {
             return NextResponse.json(
@@ -31,14 +33,39 @@ export async function POST(request: Request) {
             );
         }
 
+        // Free tier limit enforcement
+        if (!apiKey) {
+            const headersList = await headers();
+            const ip =
+                headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+                headersList.get("x-real-ip") ||
+                "127.0.0.1";
+
+            if (isLimitReached(ip)) {
+                return NextResponse.json(
+                    {
+                        error:
+                            "Free tier limit reached (10/day). Add your own API key in Settings for unlimited use.",
+                    },
+                    { status: 429 }
+                );
+            }
+
+            // Increment usage for free tier
+            incrementUsage(ip);
+        }
+
         // Generate explanation
-        const explanation = await generateExplanation({
-            code: code.trim(),
-            language,
-            difficulty,
-            provider: "gemini",
-            apiKey,
-        });
+        const explanation = await generateExplanation(
+            {
+                code: code.trim(),
+                language,
+                difficulty,
+                provider: "gemini",
+                apiKey,
+            },
+            model
+        );
 
         // Stream response section-by-section (ADR-008 order)
         const encoder = new TextEncoder();
@@ -87,7 +114,6 @@ export async function POST(request: Request) {
         const message =
             error instanceof Error ? error.message : "Internal server error";
 
-        // Map specific errors to HTTP status codes
         if (message.includes("Invalid API key")) {
             return NextResponse.json({ error: message }, { status: 401 });
         }

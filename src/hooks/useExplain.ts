@@ -7,7 +7,7 @@ import { SECTION_ORDER } from "@/lib/ai/types";
 type Sections = Partial<Record<SectionKey, string>>;
 
 interface UseExplainReturn {
-    explain: (code: string, language: string, difficulty: string) => Promise<void>;
+    explain: (code: string, language: string, difficulty: string, apiKey?: string | null, model?: string) => Promise<void>;
     sections: Sections;
     isLoading: boolean;
     error: string | null;
@@ -21,7 +21,7 @@ export function useExplain(): UseExplainReturn {
     const [activeSection, setActiveSection] = useState<SectionKey | null>(null);
 
     const explain = useCallback(
-        async (code: string, language: string, difficulty: string) => {
+        async (code: string, language: string, difficulty: string, apiKey?: string | null, model?: string) => {
             // Reset state
             setSections({});
             setError(null);
@@ -37,6 +37,8 @@ export function useExplain(): UseExplainReturn {
                         language,
                         difficulty,
                         provider: "gemini",
+                        ...(apiKey && { apiKey }),
+                        ...(model && { model }),
                     }),
                 });
 

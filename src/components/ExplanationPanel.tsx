@@ -10,6 +10,8 @@ interface ExplanationPanelProps {
     error: string | null;
     activeSection: SectionKey | null;
     onExplain: () => void;
+    hasByokKey: boolean;
+    selectedModel: string;
 }
 
 const SECTION_CONFIG: {
@@ -57,7 +59,12 @@ export default function ExplanationPanel({
     error,
     activeSection,
     onExplain,
+    hasByokKey,
+    selectedModel,
 }: ExplanationPanelProps) {
+    const modelDisplayName = hasByokKey
+        ? selectedModel.replace("models/", "").split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")
+        : "Gemini 3.0 (Google)";
     return (
         <div className="flex flex-col h-full">
             {/* Scrollable content */}
@@ -68,10 +75,13 @@ export default function ExplanationPanel({
                         AI Provider
                     </label>
                     <div className="bg-brand-card border border-brand-border rounded-lg px-3 py-2.5 flex items-center justify-between cursor-pointer hover:border-brand-muted transition-colors">
-                        <span className="text-sm text-white">Gemini 3.0 (Google)</span>
+                        <span className="text-sm text-white">{modelDisplayName}</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-semibold bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">
-                                FREE
+                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${hasByokKey
+                                    ? "bg-brand-primary/20 text-brand-link"
+                                    : "bg-yellow-500/20 text-yellow-400"
+                                }`}>
+                                {hasByokKey ? "BYOK" : "FREE"}
                             </span>
                             <svg
                                 width="12"
@@ -93,8 +103,8 @@ export default function ExplanationPanel({
                     onClick={onExplain}
                     disabled={isLoading}
                     className={`w-full py-3 rounded-lg font-semibold text-sm flex items-center justify-center gap-2 transition-all ${isLoading
-                            ? "bg-brand-primary/50 cursor-not-allowed text-white/70"
-                            : "bg-brand-primary hover:bg-brand-primary-hover text-white cursor-pointer"
+                        ? "bg-brand-primary/50 cursor-not-allowed text-white/70"
+                        : "bg-brand-primary hover:bg-brand-primary-hover text-white cursor-pointer"
                         }`}
                 >
                     {isLoading ? (
