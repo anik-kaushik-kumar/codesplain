@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import Editor, { type Monaco } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
 import { codesplainTheme } from "@/lib/monaco-theme";
+import { MAX_CODE_LENGTH } from "@/lib/security";
 import LanguageSelector from "@/components/LanguageSelector";
 import type { LanguageId } from "@/lib/languages";
 
@@ -139,6 +140,20 @@ export default function EditorPanel({
                         },
                     }}
                 />
+            </div>
+
+            {/* Character counter */}
+            <div className="h-6 border-t border-brand-border flex items-center justify-end px-3 text-[11px] font-mono shrink-0">
+                <span
+                    className={`${code.length / MAX_CODE_LENGTH > 0.95
+                            ? "text-red-400"
+                            : code.length / MAX_CODE_LENGTH > 0.8
+                                ? "text-yellow-400"
+                                : "text-brand-muted"
+                        }`}
+                >
+                    {code.length.toLocaleString()} / {MAX_CODE_LENGTH.toLocaleString()}
+                </span>
             </div>
         </div>
     );

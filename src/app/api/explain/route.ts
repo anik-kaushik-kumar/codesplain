@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { generateExplanation } from "@/lib/ai/gemini-provider";
 import { SECTION_ORDER, type StreamChunk, type ExplainRequest } from "@/lib/ai/types";
 import { isLimitReached, incrementUsage } from "@/lib/usage-tracker";
+import { sanitizeCode, detectPromptInjection, checkRateLimit, MAX_CODE_LENGTH } from "@/lib/security";
 
 export async function POST(request: Request) {
     try {
@@ -33,14 +34,45 @@ export async function POST(request: Request) {
             );
         }
 
+        // Security: sanitize input
+        const sanitizedCode = sanitizeCode(code);
+
+        if (sanitizedCode.length > MAX_CODE_LENGTH) {
+            return NextResponse.json(
+                { error: `Code exceeds maximum length of ${MAX_CODE_LENGTH.toLocaleString()} characters` },
+                { status: 400 }
+            );
+        }
+
+        // Security: prompt injection detection
+        if (detectPromptInjection(sanitizedCode)) {
+            return NextResponse.json(
+                { error: "Suspicious input detected. Please submit valid code only." },
+                { status: 400 }
+            );
+        }
+
+        // Get IP for rate limiting and usage tracking
+        const headersList = await headers();
+        const ip =
+            headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+            headersList.get("x-real-ip") ||
+            "127.0.0.1";
+
+        // Security: rate limiting (all users)
+        const rateCheck = checkRateLimit(ip);
+        if (!rateCheck.allowed) {
+            return NextResponse.json(
+                { error: "Too many requests. Please slow down." },
+                {
+                    status: 429,
+                    headers: { "Retry-After": String(rateCheck.retryAfter || 60) },
+                }
+            );
+        }
+
         // Free tier limit enforcement
         if (!apiKey) {
-            const headersList = await headers();
-            const ip =
-                headersList.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-                headersList.get("x-real-ip") ||
-                "127.0.0.1";
-
             if (isLimitReached(ip)) {
                 return NextResponse.json(
                     {
@@ -58,7 +90,7 @@ export async function POST(request: Request) {
         // Generate explanation
         const explanation = await generateExplanation(
             {
-                code: code.trim(),
+                code: sanitizedCode,
                 language,
                 difficulty,
                 provider: "gemini",
