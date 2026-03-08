@@ -1,21 +1,21 @@
 # STATE.md — Project State
 
-> **Last Updated**: 2026-03-08T13:35:00+08:00
+> **Last Updated**: 2026-03-08T15:15:00+08:00
 
 ## Current Position
 
-- **Phase**: 4 (completed)
+- **Phase**: 5 (completed)
 - **Task**: All tasks complete
 - **Status**: Verified
 
 ## Last Session Summary
 
-Phase 4 executed successfully. 2 plans, 3 tasks completed.
+Phase 5 executed successfully. 3 plans, 6 tasks completed.
 
-- Plan 4.1: MarkdownRenderer + collapsible ExplanationSection accordions
-- Plan 4.2: SkeletonLoader + CSS micro-animations (shimmer, slideIn, pulse-subtle)
-- Visual verification passed — premium dark UI with colored section icons
+- Plan 5.1: Encrypted BYOK key storage + Settings modal
+- Plan 5.2: /api/models model discovery + provider selection
+- Plan 5.3: IP-based free tier tracking (10/day) + live FreeTierBanner
 
 ## Next Steps
 
-1. `/plan 5` — Create Phase 5 execution plans (BYOK, Free Tier & Settings)
+1. `/plan 6` — Create Phase 6 execution plans (Sharing & Final Polish)
