@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { generateExplanation } from "@/lib/ai/gemini-provider";
-import { SECTION_ORDER, type StreamChunk, type ExplainRequest } from "@/lib/ai/types";
+import { generateOpenAIExplanation } from "@/lib/ai/openai-provider";
+import { generateAnthropicExplanation } from "@/lib/ai/anthropic-provider";
+import { SECTION_ORDER, type StreamChunk, type ExplainRequest, type ProviderId } from "@/lib/ai/types";
 import { isLimitReached, incrementUsage } from "@/lib/usage-tracker";
 import { sanitizeCode, detectPromptInjection, checkRateLimit, MAX_CODE_LENGTH } from "@/lib/security";
 
@@ -10,7 +12,7 @@ export async function POST(request: Request) {
         const body = await request.json();
 
         // Validate required fields
-        const { code, language, difficulty, apiKey, model } = body as ExplainRequest & { model?: string };
+        const { code, language, difficulty, apiKey, model, provider } = body as ExplainRequest & { model?: string; provider?: ProviderId };
 
         if (!code || typeof code !== "string" || code.trim().length === 0) {
             return NextResponse.json(
@@ -87,17 +89,26 @@ export async function POST(request: Request) {
             incrementUsage(ip);
         }
 
-        // Generate explanation
-        const explanation = await generateExplanation(
-            {
-                code: sanitizedCode,
-                language,
-                difficulty,
-                provider: "gemini",
-                apiKey,
-            },
-            model
-        );
+        // Generate explanation — dispatch to correct provider
+        const explainRequest: ExplainRequest = {
+            code: sanitizedCode,
+            language,
+            difficulty,
+            provider: provider || "gemini",
+            apiKey,
+        };
+
+        let explanation;
+        switch (provider) {
+            case "openai":
+                explanation = await generateOpenAIExplanation(explainRequest, model);
+                break;
+            case "anthropic":
+                explanation = await generateAnthropicExplanation(explainRequest, model);
+                break;
+            default:
+                explanation = await generateExplanation(explainRequest, model);
+        }
 
         // Stream response section-by-section (ADR-008 order)
         const encoder = new TextEncoder();

@@ -12,56 +12,79 @@ import { DEFAULT_CODE } from "@/lib/monaco-theme";
 import { loadApiKey, hasStoredKey } from "@/lib/crypto";
 import { decodeShareState, generateShareUrl } from "@/lib/sharing";
 import type { LanguageId, Difficulty } from "@/lib/languages";
+import type { ProviderId } from "@/lib/ai/types";
 
 interface ByokModel {
   id: string;
   displayName: string;
   available: boolean;
+  provider: ProviderId;
 }
+
+const PROVIDERS: ProviderId[] = ["gemini", "openai", "anthropic"];
 
 export default function Home() {
   const [language, setLanguage] = useState<LanguageId>("typescript");
   const [difficulty, setDifficulty] = useState<Difficulty>("beginner");
   const [code, setCode] = useState(DEFAULT_CODE);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [hasByokKey, setHasByokKey] = useState(false);
-  const [byokKey, setByokKey] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState("gemini-2.0-flash");
+  const [selectedProvider, setSelectedProvider] = useState<ProviderId>("gemini");
   const [isByokMode, setIsByokMode] = useState(false);
   const [byokModels, setByokModels] = useState<ByokModel[]>([]);
+  const [providerKeys, setProviderKeys] = useState<Record<ProviderId, string | null>>({
+    gemini: null,
+    openai: null,
+    anthropic: null,
+  });
   const [shareToast, setShareToast] = useState(false);
 
-  // Fetch BYOK models when key changes
-  const fetchByokModels = useCallback(async (key: string) => {
+  const hasByokKey = Object.values(providerKeys).some((k) => k !== null);
+
+  // Fetch models for a specific provider key
+  const fetchModelsForProvider = useCallback(async (provider: ProviderId, key: string) => {
     try {
       const res = await fetch("/api/models", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: key }),
+        body: JSON.stringify({ apiKey: key, provider }),
       });
       if (res.ok) {
         const data = await res.json();
-        setByokModels(data.models || []);
+        return (data.models || []) as ByokModel[];
       }
     } catch {
-      setByokModels([]);
+      // ignore
     }
+    return [];
   }, []);
 
-  // Load BYOK state + share URL on mount
+  // Load all provider keys + models on mount
   useEffect(() => {
     (async () => {
-      if (typeof window !== "undefined" && hasStoredKey("gemini")) {
-        const key = await loadApiKey("gemini");
-        if (key) {
-          setHasByokKey(true);
-          setByokKey(key);
-          fetchByokModels(key);
+      const newKeys: Record<ProviderId, string | null> = { gemini: null, openai: null, anthropic: null };
+      const allModels: ByokModel[] = [];
+
+      for (const p of PROVIDERS) {
+        if (typeof window !== "undefined" && hasStoredKey(p)) {
+          const key = await loadApiKey(p);
+          if (key) {
+            newKeys[p] = key;
+            const models = await fetchModelsForProvider(p, key);
+            allModels.push(...models);
+          }
         }
       }
+
+      setProviderKeys(newKeys);
+      setByokModels(allModels);
+
+      // Restore selections
       const savedModel = localStorage.getItem("codesplain_selected_model");
+      const savedProvider = localStorage.getItem("codesplain_selected_provider") as ProviderId | null;
       const savedByokMode = localStorage.getItem("codesplain_byok_mode");
       if (savedModel) setSelectedModel(savedModel);
+      if (savedProvider) setSelectedProvider(savedProvider);
       if (savedByokMode === "true") setIsByokMode(true);
 
       // Decode share URL
@@ -77,7 +100,7 @@ export default function Home() {
         }
       }
     })();
-  }, [fetchByokModels]);
+  }, [fetchModelsForProvider]);
 
   // Keyboard shortcut: Ctrl+Enter / Cmd+Enter
   useEffect(() => {
@@ -91,28 +114,40 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handler);
   });
 
+  // Settings callback — handles key changes per provider
   const handleKeyChange = useCallback(
-    (hasKey: boolean, key: string | null) => {
-      setHasByokKey(hasKey);
-      setByokKey(key);
-      if (!hasKey) {
-        setIsByokMode(false);
-        setSelectedModel("gemini-2.0-flash");
-        setByokModels([]);
-        localStorage.removeItem("codesplain_byok_mode");
-        localStorage.removeItem("codesplain_selected_model");
-      } else if (key) {
-        fetchByokModels(key);
+    async (provider: ProviderId, hasKey: boolean, key: string | null) => {
+      setProviderKeys((prev) => ({ ...prev, [provider]: hasKey ? key : null }));
+
+      if (hasKey && key) {
+        const models = await fetchModelsForProvider(provider, key);
+        setByokModels((prev) => [
+          ...prev.filter((m) => m.provider !== provider),
+          ...models,
+        ]);
+      } else {
+        setByokModels((prev) => prev.filter((m) => m.provider !== provider));
+        // If removed provider was selected, reset to free tier
+        if (selectedProvider === provider && isByokMode) {
+          setIsByokMode(false);
+          setSelectedModel("gemini-2.0-flash");
+          setSelectedProvider("gemini");
+          localStorage.removeItem("codesplain_byok_mode");
+          localStorage.setItem("codesplain_selected_model", "gemini-2.0-flash");
+          localStorage.setItem("codesplain_selected_provider", "gemini");
+        }
       }
     },
-    [fetchByokModels]
+    [fetchModelsForProvider, selectedProvider, isByokMode]
   );
 
   const handleSelectModel = useCallback(
-    (modelId: string, isByok: boolean) => {
+    (modelId: string, provider: ProviderId, isByok: boolean) => {
       setSelectedModel(modelId);
+      setSelectedProvider(provider);
       setIsByokMode(isByok);
       localStorage.setItem("codesplain_selected_model", modelId);
+      localStorage.setItem("codesplain_selected_provider", provider);
       localStorage.setItem("codesplain_byok_mode", String(isByok));
     },
     []
@@ -122,10 +157,10 @@ export default function Home() {
 
   const handleExplain = () => {
     if (code.trim()) {
-      // Only pass BYOK key if in BYOK mode
-      const keyToUse = isByokMode ? byokKey : null;
+      const keyToUse = isByokMode ? providerKeys[selectedProvider] : null;
       const modelToUse = isByokMode ? selectedModel : "gemini-2.0-flash";
-      explain(code, language, difficulty, keyToUse, modelToUse);
+      const providerToUse = isByokMode ? selectedProvider : "gemini";
+      explain(code, language, difficulty, keyToUse, modelToUse, providerToUse);
     }
   };
 
@@ -137,18 +172,14 @@ export default function Home() {
     });
   };
 
-  const hasExplanation = Object.values(sections).some(
-    (s) => s && s.length > 0
-  );
+  const hasExplanation = Object.values(sections).some((s) => s && s.length > 0);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       <Navbar onSettingsClick={() => setSettingsOpen(true)} />
       <FreeTierBanner hasByokKey={isByokMode} />
 
-      {/* Two-panel layout */}
       <div className="flex flex-1 min-h-0">
-        {/* Left: Code Editor */}
         <div className="flex-[3] border-r border-brand-border">
           <EditorPanel
             language={language}
@@ -158,7 +189,6 @@ export default function Home() {
           />
         </div>
 
-        {/* Right: Explanation Panel */}
         <div className="flex-[2] bg-brand-bg flex flex-col">
           <div className="px-4 pt-4 pb-2">
             <label className="text-xs font-medium text-brand-muted uppercase tracking-wider block mb-2">
@@ -175,6 +205,7 @@ export default function Home() {
               onExplain={handleExplain}
               hasByokKey={hasByokKey}
               selectedModel={selectedModel}
+              selectedProvider={selectedProvider}
               byokModels={byokModels}
               onSelectModel={handleSelectModel}
               onOpenSettings={() => setSettingsOpen(true)}
@@ -186,7 +217,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Settings Modal */}
       <SettingsModal
         isOpen={settingsOpen}
         onClose={() => setSettingsOpen(false)}

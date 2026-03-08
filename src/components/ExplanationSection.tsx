@@ -14,6 +14,7 @@ interface ExplanationSectionProps {
     isActive: boolean;
     isPending: boolean;
     index: number;
+    defaultOpen?: boolean;
 }
 
 export default function ExplanationSection({
@@ -24,6 +25,7 @@ export default function ExplanationSection({
     isActive,
     isPending,
     index,
+    defaultOpen = false,
 }: ExplanationSectionProps) {
     const [isExpanded, setIsExpanded] = useState(false);
     const [hasAutoExpanded, setHasAutoExpanded] = useState(false);
@@ -32,20 +34,20 @@ export default function ExplanationSection({
 
     const hasContent = !!content;
 
-    // Auto-expand when content first arrives
+    // Auto-expand only when defaultOpen is true (Summary)
     useEffect(() => {
-        if (hasContent && !hasAutoExpanded) {
+        if (hasContent && !hasAutoExpanded && defaultOpen) {
             setIsExpanded(true);
             setHasAutoExpanded(true);
         }
-    }, [hasContent, hasAutoExpanded]);
+    }, [hasContent, hasAutoExpanded, defaultOpen]);
 
-    // Auto-expand when actively streaming
+    // Auto-expand when actively streaming (only for defaultOpen sections)
     useEffect(() => {
-        if (isActive && !isExpanded) {
+        if (isActive && !isExpanded && defaultOpen) {
             setIsExpanded(true);
         }
-    }, [isActive, isExpanded]);
+    }, [isActive, isExpanded, defaultOpen]);
 
     // Update max-height for animation
     useEffect(() => {

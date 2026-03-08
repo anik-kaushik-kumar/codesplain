@@ -1,9 +1,9 @@
 "use client";
 
-import type { SectionKey } from "@/lib/ai/types";
+import type { SectionKey, ProviderId } from "@/lib/ai/types";
 import { SECTION_ORDER } from "@/lib/ai/types";
 import ExplanationSection from "@/components/ExplanationSection";
-import AIProviderDropdown from "@/components/AIProviderDropdown";
+import AIProviderDropdown, { ProviderIcon } from "@/components/AIProviderDropdown";
 
 interface ExplanationPanelProps {
     sections: Partial<Record<SectionKey, string>>;
@@ -13,8 +13,9 @@ interface ExplanationPanelProps {
     onExplain: () => void;
     hasByokKey: boolean;
     selectedModel: string;
-    byokModels: { id: string; displayName: string; available: boolean }[];
-    onSelectModel: (modelId: string, isByok: boolean) => void;
+    selectedProvider: ProviderId;
+    byokModels: { id: string; displayName: string; available: boolean; provider: ProviderId }[];
+    onSelectModel: (modelId: string, provider: ProviderId, isByok: boolean) => void;
     onOpenSettings: () => void;
     onShare: () => void;
     hasExplanation: boolean;
@@ -28,36 +29,11 @@ const SECTION_CONFIG: {
     color: string;
 }[] = [
         { key: "summary", label: "Summary", icon: "—", color: "text-blue-400" },
-        {
-            key: "line_by_line",
-            label: "Line-by-line explanation",
-            icon: "≡",
-            color: "text-purple-400",
-        },
-        {
-            key: "concepts",
-            label: "Concepts detected",
-            icon: "◉",
-            color: "text-green-400",
-        },
-        {
-            key: "improvements",
-            label: "Code improvements",
-            icon: "✦",
-            color: "text-yellow-400",
-        },
-        {
-            key: "simplified_code",
-            label: "Simplified version",
-            icon: "✧",
-            color: "text-cyan-400",
-        },
-        {
-            key: "examples",
-            label: "Example inputs/outputs",
-            icon: "▫",
-            color: "text-orange-400",
-        },
+        { key: "line_by_line", label: "Line-by-line explanation", icon: "≡", color: "text-purple-400" },
+        { key: "concepts", label: "Concepts detected", icon: "◉", color: "text-green-400" },
+        { key: "improvements", label: "Code improvements", icon: "✦", color: "text-yellow-400" },
+        { key: "simplified_code", label: "Simplified version", icon: "✧", color: "text-cyan-400" },
+        { key: "examples", label: "Example inputs/outputs", icon: "▫", color: "text-orange-400" },
     ];
 
 export default function ExplanationPanel({
@@ -68,6 +44,7 @@ export default function ExplanationPanel({
     onExplain,
     hasByokKey,
     selectedModel,
+    selectedProvider,
     byokModels,
     onSelectModel,
     onOpenSettings,
@@ -87,13 +64,14 @@ export default function ExplanationPanel({
                     <AIProviderDropdown
                         hasByokKey={hasByokKey}
                         selectedModel={selectedModel}
+                        selectedProvider={selectedProvider}
                         byokModels={byokModels}
                         onSelectModel={onSelectModel}
                         onOpenSettings={onOpenSettings}
                     />
                 </div>
 
-                {/* Explain Button */}
+                {/* Explain Button — with provider icon */}
                 <button
                     onClick={onExplain}
                     disabled={isLoading}
@@ -109,7 +87,7 @@ export default function ExplanationPanel({
                         </>
                     ) : (
                         <>
-                            <span className="text-lg">✦</span>
+                            <ProviderIcon provider={selectedProvider} />
                             Explain Code
                         </>
                     )}
@@ -127,7 +105,7 @@ export default function ExplanationPanel({
                     </div>
                 )}
 
-                {/* Sections — Collapsible Accordions */}
+                {/* Sections — Summary auto-opens, others closed until done */}
                 <div className="space-y-1.5">
                     {SECTION_CONFIG.map(({ key, label, icon, color }, index) => {
                         const content = sections[key];
@@ -137,6 +115,9 @@ export default function ExplanationPanel({
                             ? SECTION_ORDER.indexOf(activeSection)
                             : -1;
                         const isPending = isLoading && !content && sectionIdx > activeIdx;
+
+                        // Summary auto-opens; others start closed while loading
+                        const defaultOpen = key === "summary";
 
                         return (
                             <ExplanationSection
@@ -149,6 +130,7 @@ export default function ExplanationPanel({
                                 isActive={isActive}
                                 isPending={isPending}
                                 index={index}
+                                defaultOpen={defaultOpen}
                             />
                         );
                     })}
@@ -178,7 +160,7 @@ export default function ExplanationPanel({
                     />
                     {isLoading ? "Processing..." : "AI ready"}
                 </div>
-                <span>v2.4.0-stable</span>
+                <span>v2.5.0-stable</span>
             </div>
         </div>
     );

@@ -34,11 +34,13 @@ export interface ExplanationResponse {
     examples: string;
 }
 
+export type ProviderId = "gemini" | "openai" | "anthropic";
+
 export interface ExplainRequest {
     code: string;
     language: string;
     difficulty: "beginner" | "intermediate" | "advanced";
-    provider: "gemini";
+    provider: ProviderId;
     apiKey?: string; // BYOK — per-request, never stored server-side
 }
 

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { SectionKey, StreamChunk } from "@/lib/ai/types";
+import type { SectionKey, StreamChunk, ProviderId } from "@/lib/ai/types";
 import { SECTION_ORDER } from "@/lib/ai/types";
 
 type Sections = Partial<Record<SectionKey, string>>;
 
 interface UseExplainReturn {
-    explain: (code: string, language: string, difficulty: string, apiKey?: string | null, model?: string) => Promise<void>;
+    explain: (code: string, language: string, difficulty: string, apiKey?: string | null, model?: string, provider?: ProviderId) => Promise<void>;
     sections: Sections;
     isLoading: boolean;
     error: string | null;
@@ -21,7 +21,7 @@ export function useExplain(): UseExplainReturn {
     const [activeSection, setActiveSection] = useState<SectionKey | null>(null);
 
     const explain = useCallback(
-        async (code: string, language: string, difficulty: string, apiKey?: string | null, model?: string) => {
+        async (code: string, language: string, difficulty: string, apiKey?: string | null, model?: string, provider?: ProviderId) => {
             // Reset state
             setSections({});
             setError(null);
@@ -36,7 +36,7 @@ export function useExplain(): UseExplainReturn {
                         code,
                         language,
                         difficulty,
-                        provider: "gemini",
+                        provider: provider || "gemini",
                         ...(apiKey && { apiKey }),
                         ...(model && { model }),
                     }),
