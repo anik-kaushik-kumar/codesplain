@@ -6,12 +6,12 @@ export default function LandingPage() {
       {/* ─── Navbar ─── */}
       <nav className="flex items-center justify-between px-6 lg:px-16 py-4 border-b border-white/5">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold">
-          <span className="text-brand-primary text-xl">&lt;&gt;</span>
+          <img src="/logo.png" className="w-8 h-8 rounded-md" alt="CodeSplain Logo" />
           CodeSplain
         </Link>
         <div className="hidden md:flex items-center gap-8 text-sm text-gray-400">
           <a href="#features" className="hover:text-white transition-colors">Features</a>
-          <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
+          <a href="https://github.com/anik-kaushik-kumar/codesplain" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
         </div>
         <Link
           href="/app"
@@ -46,7 +46,7 @@ export default function LandingPage() {
                 Get Started — It&apos;s Free
               </Link>
               <a
-                href="https://github.com"
+                href="https://github.com/anik-kaushik-kumar/codesplain"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="border border-white/10 hover:border-white/25 text-white font-medium px-6 py-3 rounded-lg transition-colors text-sm"
@@ -276,11 +276,11 @@ export default function LandingPage() {
       <footer className="px-6 lg:px-16 py-8 border-t border-white/5">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm text-gray-500">
-            <span className="text-brand-primary">&lt;&gt;</span>
+            <img src="/logo.png" className="w-5 h-5 rounded-sm opacity-80" alt="CodeSplain Logo" />
             <span>CodeSplain</span>
           </div>
           <div className="flex items-center gap-6 text-sm text-gray-500">
-            <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
+            <a href="https://github.com/anik-kaushik-kumar/codesplain" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">GitHub</a>
           </div>
           <div className="text-xs text-gray-600">
             © 2026 CodeSplain. Built with Next.js.
