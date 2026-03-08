@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import MarkdownRenderer from "@/components/MarkdownRenderer";
+import SkeletonLoader from "@/components/SkeletonLoader";
 import type { SectionKey } from "@/lib/ai/types";
 
 interface ExplanationSectionProps {
@@ -70,10 +71,10 @@ export default function ExplanationSection({
     return (
         <div
             className={`rounded-lg border transition-all duration-300 ${hasContent
-                    ? "border-brand-border bg-brand-card/30"
-                    : isActive
-                        ? "border-brand-primary/40 bg-brand-primary/5"
-                        : "border-brand-border/40 bg-transparent"
+                ? "border-brand-border bg-brand-card/30"
+                : isActive
+                    ? "border-brand-primary/40 bg-brand-primary/5"
+                    : "border-brand-border/40 bg-transparent"
                 }`}
             style={{
                 animation: hasContent
@@ -112,8 +113,8 @@ export default function ExplanationSection({
                             stroke="currentColor"
                             strokeWidth="2"
                             className={`transition-transform duration-200 ${isExpanded
-                                    ? "text-brand-muted rotate-90"
-                                    : "text-green-400 rotate-0"
+                                ? "text-brand-muted rotate-90"
+                                : "text-green-400 rotate-0"
                                 }`}
                         >
                             {isExpanded ? (
@@ -146,22 +147,7 @@ export default function ExplanationSection({
                 style={{ maxHeight }}
             >
                 <div className="px-3 pb-3 pt-0">
-                    {isActive && !hasContent && (
-                        <div className="space-y-2 py-1">
-                            {[100, 85, 70].map((width, i) => (
-                                <div
-                                    key={i}
-                                    className="h-3 rounded bg-brand-border/30 animate-[shimmer_1.5s_ease-in-out_infinite]"
-                                    style={{
-                                        width: `${width}%`,
-                                        backgroundSize: "200% 100%",
-                                        backgroundImage:
-                                            "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)",
-                                    }}
-                                />
-                            ))}
-                        </div>
-                    )}
+                    {isActive && !hasContent && <SkeletonLoader lines={4} />}
                     {hasContent && <MarkdownRenderer content={content} />}
                 </div>
             </div>
