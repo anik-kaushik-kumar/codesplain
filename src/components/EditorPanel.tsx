@@ -3,20 +3,24 @@
 import { useState, useRef } from "react";
 import Editor, { type Monaco } from "@monaco-editor/react";
 import type { editor } from "monaco-editor";
-import { codesplainTheme, DEFAULT_CODE } from "@/lib/monaco-theme";
+import { codesplainTheme } from "@/lib/monaco-theme";
 import LanguageSelector from "@/components/LanguageSelector";
 import type { LanguageId } from "@/lib/languages";
 
 interface EditorPanelProps {
     language: LanguageId;
     onLanguageChange: (language: LanguageId) => void;
+    code: string;
+    onCodeChange: (code: string) => void;
 }
 
 export default function EditorPanel({
     language,
     onLanguageChange,
+    code,
+    onCodeChange,
 }: EditorPanelProps) {
-    const [code, setCode] = useState(DEFAULT_CODE);
+
     const [copied, setCopied] = useState(false);
     const [formatted, setFormatted] = useState(false);
     const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
@@ -105,7 +109,7 @@ export default function EditorPanel({
                     theme="codesplain-dark"
                     beforeMount={handleBeforeMount}
                     onMount={handleMount}
-                    onChange={(value) => setCode(value || "")}
+                    onChange={(value) => onCodeChange(value || "")}
                     loading={
                         <div className="flex items-center justify-center h-full bg-brand-bg">
                             <div className="text-center">
